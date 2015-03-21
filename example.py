@@ -4,18 +4,37 @@ from PyQt4 import *
 from PyQt4.QtOpenGL import *
 from PyQt4 import QtCore, QtGui, QtOpenGL
 from PyQt4.QtGui import QColor,QPixmap,QLabel
-import math,os,sys
+import math,os, PIL.Image
+import numpy as np
+
 
 
 class Window(QtGui.QWidget):
     def __init__(self):
         super(Window, self).__init__()
+
         if len(sys.argv) ==2:
             self.eye_power = int(sys.argv[1])
         else:
             self.eye_power = 4
+
+        self.eye_power = 4
        
         self.GLWidget = WfWidget()
+        '''self.slider =QtGui.QSlider(QtCore.Qt.Horizontal, self)
+        self.slider.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.slider.setGeometry(30, 40, 100, 30)
+        self.slider.setMinimum(-10)
+        self.slider.setMaximum(10)
+        self.slider.valueChanged[int].connect(self.changeValue)'''
+        #pic = QtGui.QLabel()
+        #pic.setGeometry(10, 10, 400, 200)
+        #pixmap = QtGui.QPixmap("eye2.jpg")
+        #pixmap = pixmap.scaledToHeight(200)
+        #pic.setPixmap(pixmap)
+
+        
+
         mainLayout = QtGui.QVBoxLayout()
         mainLayout.addWidget(self.GLWidget)
         #mainLayout.addWidget(pic)
@@ -24,13 +43,16 @@ class Window(QtGui.QWidget):
 
     def changeValue(self,value):
         self.GLWidget.diff = self.eye_power - value
+
         #print 'Difference updates' , self.GLWidget.diff
         self.GLWidget.eye_proxy = self.eye_power
+        print 'Difference' , self.GLWidget.diff
         self.GLWidget.updateGL()
         
 class WfWidget(QGLWidget):
     def __init__(self, parent = None):
         super(WfWidget, self).__init__(parent)
+
         self.diff =5
         self.setMouseTracking(True)
         self.vertexList=[]
@@ -66,6 +88,7 @@ class WfWidget(QGLWidget):
 
     def computeVertices(self,cx, cy, r, num_segments):
         self.vertexList =[]
+        
         for ii in range(num_segments):
            
             theta = 2.0 * 3.1415926 * (ii) / (num_segments)
@@ -118,12 +141,19 @@ class WfWidget(QGLWidget):
             glEnd()
         #glFlush()  
 
+            
     def mouseMoveEvent(self,event):
-        
+        #print 'In Mouse Move'
         self.mx = event.x()
         self.my = self.height()-event.y()
-        #print self.mx,self.my       
-        self.updateGL() 
+        print self.mx,self.my
+        #self.drawCircle(x,y,10,16)
+        #self.swapBuffers()
+        self.updateGL()
+        #print self.doubleBuffer()
+        
+
+
     
     def paintGL(self):
       
@@ -136,6 +166,7 @@ class WfWidget(QGLWidget):
         
         glTranslatef(0,0,-200)
         glRotatef(-90,0,0,1)
+
         glEnable(GL_BLEND)
         glColor4f(1,1,1,0.6)
         
@@ -170,6 +201,36 @@ class WfWidget(QGLWidget):
         side = min(width, height)
         if side < 0:
             return
+
+        glColor3f(1,1,1)
+        self.texid =self.bindTexture(self.pixmap,GL_TEXTURE_2D,GL_RGBA)
+        #r = QtCore.QRectF(500.0,500.0,0.0,0.0)
+        r = QtCore.QRectF(QtCore.QPoint(0,self.width()),QtCore.QPoint(self.width(),0))
+        print r.topLeft(), r.bottomRight()
+        glRotatef(90,0,0,1)
+        self.drawTexture(r,self.texid,GL_TEXTURE_2D)
+        
+        glTranslatef(0,0,200)
+
+        #glBindTexture(GL_TEXTURE_2D, self.SplashTex)
+        #glColorf(1,1,0)
+	#glPoint(100,400)
+        glPolygonMode (GL_FRONT_AND_BACK,GL_FILL )
+        '''glClearColor(0.0, 0.0, 0.0, 0.1);
+        glColor3f(1,0,0)
+        glRectf(self.mx-30, self.my-10, self.mx+30, self.my+10)'''
+        self.cursorRectangle(self.mx-130, self.my-5, self.mx+50, self.my+5)
+        #if self.mx >=225 and self.mx <= 275 and self.my>=225 and self.my <= 275:
+        if self.mx >=130 and self.mx <= 260 and self.my>=160 and self.my <= 310:
+            self.drawCircle(self.mx ,self.my ,50,16)
+
+
+    def resizeGL(self, width, height):
+        print 'wh', width, height
+
+        side = min(width, height)
+        if side < 0:
+            return
         glViewport(0,0,width,height)
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
@@ -182,6 +243,7 @@ class WfWidget(QGLWidget):
         glutInit()
         glutInitDisplayMode(GLUT_DOUBLE|GLUT_RGBA|GLUT_DEPTH)
                 
+
     def maximumSize(self):        
         return QtCore.QSize(500, 500)
     def sizeHint(self):
@@ -196,6 +258,18 @@ class WfWidget(QGLWidget):
         glColor4f(0.0,0.0,0.0,0.3)
         glVertex3f( x2, y2 ,-10);
         glVertex3f( x1, y2 ,-10);
+
+        #glClearColor(0,0,0,0.5)
+        #glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT| GL_STENCIL_BUFFER_BIT);
+       
+        glColor3f(1.0,1.0,1.0)
+        glBegin(GL_POLYGON);
+        glVertex2f( x1, y1 );
+        glVertex2f( x2, y1 );
+        glColor3f(0.0,0.0,0.0)
+        glVertex2f( x2, y2 );
+        glVertex2f( x1, y2 );
+
         glEnd();
         glFlush();
            
